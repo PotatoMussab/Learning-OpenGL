@@ -1,12 +1,29 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+//--------------------------------Settings-----------------------------------------------
+const unsigned int WIN_WIDTH = 800;
+const unsigned int WIN_HEIGHT = 600;
+const char *WIN_TITLE = "Learning OpenGL";
+const char *vertexShaderSourceCode =
+    "#version 330 core\n"
+    "layout (location=0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\n"
+    "}\0";
+const char *fragmentShaderSourceCode =
+    "#version 330 core\n"
+    "out vec4 color;\n"
+    "void main()\n"
+    "{\n"
+    "color = vec4(1.0f, 0.5f, 0.3f, 1.0f);\n"
+    "}\0";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-inline GLuint createVertexShader();
-inline GLuint createFragmentShader();
-
+inline GLuint createVertexShader(const char *const *sourceCode); //Pass pointer to a string
+inline GLuint createFragmentShader(const char *const *sourceCode);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -19,7 +36,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);// Set to core profile
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL); //Create window
+    GLFWwindow *window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, WIN_TITLE, NULL, NULL); //Create window
     if (window == NULL) //In case window doesn't create
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -45,8 +62,8 @@ int main()
          0.0f,  0.5f, 0.0f
     };
 
-    GLuint vertexShader = createVertexShader();
-    GLuint fragmentShader = createFragmentShader();
+    GLuint vertexShader = createVertexShader(&vertexShaderSourceCode);
+    GLuint fragmentShader = createFragmentShader(&fragmentShaderSourceCode);
     //Create shader program
     GLuint shaderProgram = glCreateProgram();
     //Attach shaders to program
@@ -75,12 +92,11 @@ int main()
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glUseProgram(shaderProgram);
 
     while(!glfwWindowShouldClose(window)) //While window shouldn't close
     {
         glClear(GL_COLOR_BUFFER_BIT); //Clear color buffer before rendering next frame
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glfwSwapBuffers(window); //Swap color buffers (render next frame)
         glfwPollEvents(); //Check for events
@@ -97,18 +113,11 @@ void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, in
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
-inline GLuint createVertexShader()
+inline GLuint createVertexShader(const char *const *sourceCode)
 {
     //Create vertex shader
-    const char *vertexShaderSourceCode =
-    "#version 330 core\n"
-    "layout (location=0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\n"
-    "}\0";
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSourceCode, NULL);
+    glShaderSource(vertexShader, 1, sourceCode, NULL);
     glCompileShader(vertexShader);
     //Check for compilation errors
     int success;
@@ -121,18 +130,11 @@ inline GLuint createVertexShader()
     }
     return vertexShader;
 }
-inline GLuint createFragmentShader()
+inline GLuint createFragmentShader(const char *const *sourceCode)
 {
     //Create Fragment shader
-    const char *fragmentShaderSourceCode =
-    "#version 330 core\n"
-    "out vec4 color;\n"
-    "void main()\n"
-    "{\n"
-    "color = vec4(1.0f, 0.5f, 0.3f, 1.0f);\n"
-    "}\0";
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSourceCode, NULL);
+    glShaderSource(fragmentShader, 1, sourceCode, NULL);
     glCompileShader(fragmentShader);
     //Check for compilation errors
     int success;

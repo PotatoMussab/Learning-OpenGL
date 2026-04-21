@@ -6,9 +6,9 @@
             "command": "D:\\MSYSCompiler\\mingw64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
+                "glad.o",
                 "-g",
                 "${file}",
-                "glad.c",
                 "-I", "D:/GLFW/include",
                 "-L", "D:/GLFW/lib-mingw-w64",
                 "-lglfw3",
