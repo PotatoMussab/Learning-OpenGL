@@ -3,12 +3,27 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <sstream>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+//--------------------------------Typedefs-----------------------------------------------
+typedef int32_t i32;
+typedef int16_t i16;
+typedef int8_t i8;
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
+typedef struct{
+    int height = 0;
+    int width = 0;
+    int nrChannels = 0;
+    char *data = 0;
+} image;
 //--------------------------------Settings-----------------------------------------------
 const unsigned int WIN_WIDTH = 800;
 const unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
-const char *VERT_SHADER_PATH = ".\\shaders\\shader.vs";
-const char *FRAG_SHADER_PATH = ".\\shaders\\shader.fs";
+const char *VERTEX_SHADER_PATH = ".\\shaders\\shader.vs";
+const char *FRAGMENT_SHADER_PATH = ".\\shaders\\shader.fs";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -46,13 +61,19 @@ int main()
     glfwSetKeyCallback(window, keyPress_callback);                     // Set callback for key press
 
     float triangleVertices[] = {
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
+         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
         -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
+         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,  // top right
+        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f // top left
     };
 
-    GLuint vertexShader = createShader(GL_VERTEX_SHADER, &vertexShaderSourceCode);
-    GLuint fragmentShader = createShaderFromFile(GL_FRAGMENT_SHADER, &FRAG_SHADER_PATH);
+    unsigned int indices[] = {
+        0, 1, 2,
+        1, 2, 3
+    };
+
+    GLuint vertexShader = createShaderFromFile(GL_VERTEX_SHADER, &VERTEX_SHADER_PATH);
+    GLuint fragmentShader = createShaderFromFile(GL_FRAGMENT_SHADER, &FRAGMENT_SHADER_PATH);
     // Create shader program
     GLuint shaderProgram = glCreateProgram();
     // Attach shaders to program
@@ -72,13 +93,16 @@ int main()
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    GLuint VBO, VAO;
+    GLuint VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
@@ -91,7 +115,7 @@ int main()
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
         glClear(GL_COLOR_BUFFER_BIT); // Clear color buffer before rendering next frame
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window); // Swap color buffers (render next frame)
         glfwPollEvents();        // Check for events
     }
