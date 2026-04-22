@@ -1,7 +1,10 @@
 #version 330
 in vec3 vertexColor;
+in vec2 texPos;
 out vec4 fragColor;
+
+uniform sampler2D texSampler;
 void main()
 {
-    fragColor = vec4(vertexColor, 1.0f);
+    fragColor = texture(texSampler, texPos);
 }

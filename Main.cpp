@@ -16,7 +16,7 @@ typedef struct{
     int height = 0;
     int width = 0;
     int nrChannels = 0;
-    char *data = 0;
+    unsigned char *data = 0;
 } image;
 //--------------------------------Settings-----------------------------------------------
 const unsigned int WIN_WIDTH = 800;
@@ -61,10 +61,10 @@ int main()
     glfwSetKeyCallback(window, keyPress_callback);                     // Set callback for key press
 
     float triangleVertices[] = {
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,  // top right
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f // top left
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left
+         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
+        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top left
+         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f // top right
     };
 
     unsigned int indices[] = {
@@ -104,10 +104,31 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("./textures/bookshelf.jpg", &width, &height, &nrChannels, 0);
+
+    GLuint texture;
+    glGenTextures(1,&texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "FAILED TO LOAD IMAGE" << std::endl;
+    }
+    stbi_image_free(data);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texSampler"), 0);
 
     glUseProgram(shaderProgram);
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
