@@ -7,17 +7,21 @@ const unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
 const char *vertexShaderSourceCode =
     "#version 330 core\n"
-    "layout (location=0) in vec3 aPos;\n"
+    "layout (location=0) in vec3 inPos;\n"
+    "layout (location=1) in vec3 inColor;\n"
+    "out vec3 vertexColor;\n"
     "void main()\n"
     "{\n"
-    "gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\n"
+    "gl_Position = vec4(inPos, 1.0f);\n"
+    "vertexColor = inColor;\n"
     "}\0";
 const char *fragmentShaderSourceCode =
     "#version 330 core\n"
-    "out vec4 color;\n"
+    "in vec3 vertexColor;\n"
+    "out vec4 fragColor;\n"
     "void main()\n"
     "{\n"
-    "color = vec4(1.0f, 0.5f, 0.3f, 1.0f);\n"
+    "fragColor = vec4(vertexColor, 1.0f);\n"
     "}\0";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
@@ -54,12 +58,11 @@ int main()
     glViewport(0,0, 800,600); //Create a viewport for the window. Maps from (-1,1) to (0, max width/height)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //Set callback for resizing window
     glfwSetKeyCallback(window, keyPress_callback); //Set callback for key press
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); //Set color (RGBA color scheme) for clearing window
 
     float triangleVertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
+         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right 
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f // top 
     };
 
     GLuint vertexShader = createVertexShader(&vertexShaderSourceCode);
@@ -90,9 +93,13 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
     glUseProgram(shaderProgram);
+    glClearColor(0.2f, 0.2f, 0.3f, 1.0f); //Set color (RGBA color scheme) for clearing window
 
     while(!glfwWindowShouldClose(window)) //While window shouldn't close
     {
@@ -101,6 +108,10 @@ int main()
         glfwSwapBuffers(window); //Swap color buffers (render next frame)
         glfwPollEvents(); //Check for events
     }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
 
     glfwTerminate(); //Close window
     return 0;
