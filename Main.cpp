@@ -1,6 +1,8 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <fstream>
+#include <sstream>
 //--------------------------------Settings-----------------------------------------------
 const unsigned int WIN_WIDTH = 800;
 const unsigned int WIN_HEIGHT = 600;
@@ -15,19 +17,12 @@ const char *vertexShaderSourceCode =
     "gl_Position = vec4(inPos, 1.0f);\n"
     "vertexColor = inColor;\n"
     "}\0";
-const char *fragmentShaderSourceCode =
-    "#version 330 core\n"
-    "in vec3 vertexColor;\n"
-    "out vec4 fragColor;\n"
-    "void main()\n"
-    "{\n"
-    "fragColor = vec4(vertexColor, 1.0f);\n"
-    "}\0";
+const char *fragmentShaderPath = ".\\shaders\\shader.fs";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-inline GLuint createVertexShader(const char *const *sourceCode); //Pass pointer to a string
-inline GLuint createFragmentShader(const char *const *sourceCode);
+GLuint createShader(GLenum shaderType, const char *const *pSourceCode); //Pass pointer to a string
+GLuint createShaderFromFile(GLenum shaderType, const char *const *filePath);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -65,8 +60,8 @@ int main()
          0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f // top 
     };
 
-    GLuint vertexShader = createVertexShader(&vertexShaderSourceCode);
-    GLuint fragmentShader = createFragmentShader(&fragmentShaderSourceCode);
+    GLuint vertexShader = createShader(GL_VERTEX_SHADER, &vertexShaderSourceCode);
+    GLuint fragmentShader = createShaderFromFile(GL_FRAGMENT_SHADER, &fragmentShaderPath);
     //Create shader program
     GLuint shaderProgram = glCreateProgram();
     //Attach shaders to program
@@ -124,37 +119,41 @@ void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, in
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
-inline GLuint createVertexShader(const char *const *sourceCode)
+GLuint createShader(GLenum shaderType, const char *const *pSourceCode)
 {
     //Create vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, sourceCode, NULL);
-    glCompileShader(vertexShader);
+    GLuint shader = glCreateShader(shaderType);
+    glShaderSource(shader, 1, pSourceCode, NULL);
+    glCompileShader(shader);
     //Check for compilation errors
     int success;
     char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if(!success)
     {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR COMPILING VERTEX SHADER\n" << infoLog << std::endl;
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "ERROR COMPILING SHADER\n" << infoLog << std::endl;
     }
-    return vertexShader;
+    return shader;
 }
-inline GLuint createFragmentShader(const char *const *sourceCode)
+GLuint createShaderFromFile(GLenum shaderType, const char *const *filePath)
 {
-    //Create Fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, sourceCode, NULL);
-    glCompileShader(fragmentShader);
-    //Check for compilation errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success)
+    GLuint shader = 0;
+    std::ifstream file;
+    file.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try
     {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << infoLog << std::endl;
+        file.open(*filePath);
+        std::stringstream fileStream;
+        fileStream << file.rdbuf();
+        file.close();
+        std::string fileContent = fileStream.str();
+        const char* sourceCode = fileContent.c_str();
+        shader = createShader(shaderType, &sourceCode);
     }
-    return fragmentShader;
+    catch(std::ifstream::failure e)
+    {
+        std::cout << "ERROR READING SHADER FILE" << std::endl;
+    }
+    return shader;
 }
