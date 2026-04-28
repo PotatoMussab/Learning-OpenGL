@@ -1,10 +1,13 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <sstream>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 //--------------------------------Typedefs-----------------------------------------------
 typedef int32_t i32;
 typedef int16_t i16;
@@ -61,15 +64,16 @@ int main()
     glfwSetKeyCallback(window, keyPress_callback);                     // Set callback for key press
 
     float triangleVertices[] = {
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,// top left
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f // top right
+        //position             //texture coords  
+        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f, // bottom left
+         0.5f, -0.5f, 0.0f,    1.0f, 0.0f, // bottom right
+        -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,// top left
+         0.5f,  0.5f, 0.0f,    1.0f, 1.0f // top right
     };
 
     unsigned int indices[] = {
-        0, 1, 2,
-        1, 2, 3
+        0, 1, 2, // bottom right triangle
+        1, 2, 3  // bottom left triangle
     };
 
     GLuint vertexShader = createShaderFromFile(GL_VERTEX_SHADER, &VERTEX_SHADER_PATH);
@@ -90,52 +94,74 @@ int main()
         std::cout << "ERROR LINKING SHADERS\n"
                   << infoLog << std::endl;
     }
-    glDeleteShader(vertexShader);
+    glDeleteShader(vertexShader); //Delete shaders after linking to program
     glDeleteShader(fragmentShader);
+    glUseProgram(shaderProgram);
 
-    GLuint VBO, VAO, EBO;
+    GLuint VBO, VAO, EBO; //Generate VBO, VAO and EBO
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *) 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(0);
+    glBindVertexArray(VAO); //Bind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); //Bind VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW); //Load vertex data into VBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); //Bind EBO
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); //Load indices into EBO
+    //Create attribute pointers for VAO and enable them
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0); //First 3 floats are position coords XYZ
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float))); //Next 2 values are texture coords ST
+    glEnableVertexAttribArray(0); //Enable attribute pointers
     glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
 
+    //Apply texture to the drawn shape
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("./textures/bookshelf.jpg", &width, &height, &nrChannels, 0);
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load("./textures/bookshelf.jpg", &width, &height, &nrChannels, 0); //Load image
 
     GLuint texture;
-    glGenTextures(1,&texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glGenTextures(1,&texture); //Generate texture
+    glActiveTexture(GL_TEXTURE0); //Set active texture to 0
+    glBindTexture(GL_TEXTURE_2D, texture); //Bind generated texture
+    // Set texture wrapping/filtering optionss
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if(data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if(nrChannels == 3)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //Load texture data into buffer
+        else
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D); //Generate Mipmaps automatically
     }
     else
     {
         std::cout << "FAILED TO LOAD IMAGE" << std::endl;
     }
-    stbi_image_free(data);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texSampler"), 0);
+    stbi_image_free(data); //Free image data
+    //Apply transformations to the data
+    glm::vec3 axis(0.0f, 1.0f, 0.0f);
+    float rotDegrees = glm::radians(90.0 * glfwGetTime());
+    glm::mat4 transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
 
-    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texSampler"), 0); //Set the texture sampler to read from GL_TEXTURE0 (usually 0 by default)
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
         glClear(GL_COLOR_BUFFER_BIT); // Clear color buffer before rendering next frame
+
+        rotDegrees = glm::radians(90.0 * glfwGetTime());
+        transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
+
+        glBindVertexArray(VAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window); // Swap color buffers (render next frame)
         glfwPollEvents();        // Check for events
@@ -143,6 +169,8 @@ int main()
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteTextures(1, &texture);
     glDeleteProgram(shaderProgram);
 
     glfwTerminate(); // Close window

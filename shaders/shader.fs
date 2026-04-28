@@ -1,5 +1,4 @@
-#version 330
-in vec3 vertexColor;
+#version 330 core
 in vec2 texPos;
 out vec4 fragColor;
 
