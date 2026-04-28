@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "shader.h"
 //--------------------------------Typedefs-----------------------------------------------
 typedef int32_t i32;
 typedef int16_t i16;
@@ -25,8 +26,8 @@ typedef struct{
 const unsigned int WIN_WIDTH = 800;
 const unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
-const char *VERTEX_SHADER_PATH = ".\\shaders\\shader.vs";
-const char *FRAGMENT_SHADER_PATH = ".\\shaders\\shader.fs";
+const char *VERTEX_SHADER_PATH = "..\\shaders\\shader.vs";
+const char *FRAGMENT_SHADER_PATH = "..\\shaders\\shader.fs";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -75,28 +76,10 @@ int main()
         0, 1, 2, // bottom right triangle
         1, 2, 3  // bottom left triangle
     };
-
-    GLuint vertexShader = createShaderFromFile(GL_VERTEX_SHADER, &VERTEX_SHADER_PATH);
-    GLuint fragmentShader = createShaderFromFile(GL_FRAGMENT_SHADER, &FRAGMENT_SHADER_PATH);
-    // Create shader program
-    GLuint shaderProgram = glCreateProgram();
-    // Attach shaders to program
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // Check for linking errors
-    int success;
-    char infoLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR LINKING SHADERS\n"
-                  << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader); //Delete shaders after linking to program
-    glDeleteShader(fragmentShader);
-    glUseProgram(shaderProgram);
+    Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
+    Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0}; 
+    ShaderProgram shaderProgram({&vShader, &fShader});
+    glUseProgram(shaderProgram.ID);
 
     GLuint VBO, VAO, EBO; //Generate VBO, VAO and EBO
     glGenBuffers(1, &VBO);
@@ -117,7 +100,7 @@ int main()
     //Apply texture to the drawn shape
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("./textures/bookshelf.jpg", &width, &height, &nrChannels, 0); //Load image
+    unsigned char *data = stbi_load("../textures/bookshelf.jpg", &width, &height, &nrChannels, 0); //Load image
 
     GLuint texture;
     glGenTextures(1,&texture); //Generate texture
@@ -145,10 +128,10 @@ int main()
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
     glm::mat4 transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
-    GLuint transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    GLuint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
 
-    glUniform1i(glGetUniformLocation(shaderProgram, "texSampler"), 0); //Set the texture sampler to read from GL_TEXTURE0 (usually 0 by default)
+    glUniform1i(glGetUniformLocation(shaderProgram.ID, "texSampler"), 0); //Set the texture sampler to read from GL_TEXTURE0 (usually 0 by default)
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
@@ -171,7 +154,7 @@ int main()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteTextures(1, &texture);
-    glDeleteProgram(shaderProgram);
+    glDeleteProgram(shaderProgram.ID);
 
     glfwTerminate(); // Close window
     return 0;
@@ -183,43 +166,4 @@ void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, in
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-}
-GLuint createShader(GLenum shaderType, const char *const *pSourceCode)
-{
-    // Create vertex shader
-    GLuint shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, pSourceCode, NULL);
-    glCompileShader(shader);
-    // Check for compilation errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "ERROR COMPILING SHADER\n"
-                  << infoLog << std::endl;
-    }
-    return shader;
-}
-GLuint createShaderFromFile(GLenum shaderType, const char *const *filePath)
-{
-    GLuint shader = 0;
-    std::ifstream file;
-    file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        file.open(*filePath);
-        std::stringstream fileStream;
-        fileStream << file.rdbuf();
-        file.close();
-        std::string fileContent = fileStream.str();
-        const char *sourceCode = fileContent.c_str();
-        shader = createShader(shaderType, &sourceCode);
-    }
-    catch (std::ifstream::failure e)
-    {
-        std::cout << "ERROR READING SHADER FILE" << std::endl;
-    }
-    return shader;
 }
