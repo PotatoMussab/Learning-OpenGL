@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "shader.h"
+#include "shader.hpp"
 //--------------------------------Typedefs-----------------------------------------------
 typedef int32_t i32;
 typedef int16_t i16;
@@ -79,7 +79,7 @@ int main()
     Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
     Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0}; 
     ShaderProgram shaderProgram({&vShader, &fShader});
-    glUseProgram(shaderProgram.ID);
+    shaderProgram.use();
 
     GLuint VBO, VAO, EBO; //Generate VBO, VAO and EBO
     glGenBuffers(1, &VBO);

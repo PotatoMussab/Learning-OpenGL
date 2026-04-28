@@ -42,7 +42,7 @@ class ShaderProgram
             for(Shader *pShader:shaderList)
                 glDeleteShader(pShader->ID);
         }
-
+        inline void use() {glUseProgram(ID);}
 
     private:
         GLuint createShader(GLenum shaderType, const char *const *pSourceCode)
