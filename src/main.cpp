@@ -174,9 +174,7 @@ int main()
                                     glm::vec3(0.0f, 0.0f, 0.0f),
                                     glm::vec3(0.0f, 1.0f, 0.0f));
     //Apply clip-space transformation (perspective)
-    glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
-                                                (float)WIN_WIDTH/(float)WIN_HEIGHT,
-                                                0.001f, 100.0f);
+    glm::mat4 projMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 10.0f);
     //Combine into one big transformation matrix
     glm::mat4 transformMat = projMat * viewMat * localMat;
 
