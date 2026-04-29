@@ -63,36 +63,79 @@ int main()
     glfwSetKeyCallback(window, keyPress_callback);                     // Set callback for key press
 
     float triangleVertices[] = {
-        //position             //texture coords  
-        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f, // bottom left
-         0.5f, -0.5f, 0.0f,    1.0f, 0.0f, // bottom right
-        -0.5f,  0.5f, 0.0f,    0.0f, 1.0f,// top left
-         0.5f,  0.5f, 0.0f,    1.0f, 1.0f // top right
+        // Front face
+        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 0 (front-bot-left)
+         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 1 (front-bot-right)
+         0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 2 (front-top-right)
+        -0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 3 (front-top-left)
+        // Back face
+        -0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 4 (back-bot-left)
+         0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 5 (back-bot-right)
+         0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 6 (back-top-right)
+        -0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 7 (back-top-left)
+        // Left face
+        -0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 8  (back-bot-left)
+        -0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 9  (front-bot-left)
+        -0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 10 (front-top-left)
+        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 11 (back-top-left)
+        // Right face
+         0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 12 (front-bot-right)
+         0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 13 (back-bot-right)
+         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 14 (back-top-right)
+         0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 15 (front-top-right)
+        // Top face
+        -0.5f,  0.5f, -0.1f,  0.0f, 0.0f, // 16 (front-top-left)
+         0.5f,  0.5f, -0.1f,  1.0f, 0.0f, // 17 (front-top-right)
+         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 18 (back-top-right)
+        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 19 (back-top-left)
+        // Bottom face
+        -0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 20 (back-bot-left)
+         0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 21 (back-bot-right)
+         0.5f, -0.5f, -0.1f,  1.0f, 1.0f, // 22 (front-bot-right)
+        -0.5f, -0.5f, -0.1f,  0.0f, 1.0f  // 23 (front-bot-left)
+    };
+    unsigned int indices[] = {
+        // Front face
+        0, 1, 2,
+        2, 3, 0,
+        // Back face
+        4, 5, 6,
+        6, 7, 4,
+        // Left face
+        8,  9,  10,
+        10, 11, 8,
+        // Right face
+        12, 13, 14,
+        14, 15, 12,
+        // Top face
+        16, 17, 18,
+        18, 19, 16,
+        // Bottom face
+        20, 21, 22,
+        22, 23, 20
     };
 
-    unsigned int indices[] = {
-        0, 1, 2, // bottom right triangle
-        1, 2, 3  // bottom left triangle
-    };
     Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
     Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0}; 
     ShaderProgram shaderProgram({&vShader, &fShader});
     shaderProgram.use();
-
-    GLuint VBO, VAO, EBO; //Generate VBO, VAO and EBO
+    //Generate VAO, VBO and EBO 
+    GLuint VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
     glGenVertexArrays(1, &VAO);
-
-    glBindVertexArray(VAO); //Bind VAO
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); //Bind VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW); //Load vertex data into VBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); //Bind EBO
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); //Load indices into EBO
-    //Create attribute pointers for VAO and enable them
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0); //First 3 floats are position coords XYZ
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float))); //Next 2 values are texture coords ST
-    glEnableVertexAttribArray(0); //Enable attribute pointers
+    //Bind VAO
+    glBindVertexArray(VAO);
+    //Bind EBO and buffer indices data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    //Bind VBO and buffer vertex data
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+    //Define attribute arrays and enable them in VAO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     //Apply texture to the drawn shape
@@ -105,8 +148,8 @@ int main()
     glActiveTexture(GL_TEXTURE0); //Set active texture to 0
     glBindTexture(GL_TEXTURE_2D, texture); //Bind generated texture
     // Set texture wrapping/filtering optionss
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if(data)
@@ -122,35 +165,45 @@ int main()
         std::cout << "FAILED TO LOAD IMAGE" << std::endl;
     }
     stbi_image_free(data); //Free image data
-    //Apply transformations to the data
+    //Apply transformations to make the picture rotate (local space)
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
-    glm::mat4 transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+    glm::mat4 localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+    //Apply Camera transformations (transform to view space)
+    glm::mat4 viewMat = glm::lookAt(glm::vec3(0.0f, 0.6f, -3.0f),
+                                    glm::vec3(0.0f, 0.0f, 0.0f),
+                                    glm::vec3(0.0f, 1.0f, 0.0f));
+    //Apply clip-space transformation (perspective)
+    glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
+                                                (float)WIN_WIDTH/(float)WIN_HEIGHT,
+                                                0.001f, 100.0f);
+    //Combine into one big transformation matrix
+    glm::mat4 transformMat = projMat * viewMat * localMat;
+
     GLint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-    shaderProgram.setMat4(transformLoc, transformMat);
-    
-    shaderProgram.setInt("texSampler", 0);
+    shaderProgram.setInt("texSampler", 0); //Set texSampler to read from GL_TEXTURE0
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
+    glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
-        glClear(GL_COLOR_BUFFER_BIT); // Clear color buffer before rendering next frame
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // Clear color buffer before rendering next frame
 
         rotDegrees = glm::radians(90.0 * glfwGetTime());
-        transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+        localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+        transformMat = projMat * viewMat * localMat;
         shaderProgram.setMat4(transformLoc, transformMat);
 
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glfwSwapBuffers(window); // Swap color buffers (render next frame)
-        glfwPollEvents();        // Check for events
+        glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, (void*) 0);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
     glDeleteTextures(1, &texture);
     glDeleteProgram(shaderProgram.ID);
 
