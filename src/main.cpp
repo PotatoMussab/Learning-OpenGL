@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "shader.hpp"
+#include "camera.hpp"
 //--------------------------------Typedefs-----------------------------------------------
 typedef int32_t i32;
 typedef int16_t i16;
@@ -28,6 +29,9 @@ const unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
 const char *VERTEX_SHADER_PATH = "..\\shaders\\shader.vs";
 const char *FRAGMENT_SHADER_PATH = "..\\shaders\\shader.fs";
+//-------------------------------Global Variables----------------------------------------
+Camera cam = Camera();
+float frameStart = 0.0f;
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -131,7 +135,7 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     //Bind VBO and buffer vertex data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_DYNAMIC_DRAW);
     //Define attribute arrays and enable them in VAO
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
@@ -170,11 +174,12 @@ int main()
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
     glm::mat4 localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
     //Apply Camera transformations (transform to view space)
-    glm::mat4 viewMat = glm::lookAt(glm::vec3(0.0f, 0.6f, -3.0f),
-                                    glm::vec3(0.0f, 0.0f, 0.0f),
-                                    glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
     //Apply clip-space transformation (perspective)
-    glm::mat4 projMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 10.0f);
+    //glm::mat4 projMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 10.0f);
+    glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
+                                        (float)WIN_WIDTH/(float)WIN_HEIGHT,
+                                        0.1f, 10.0f);
     //Combine into one big transformation matrix
     glm::mat4 transformMat = projMat * viewMat * localMat;
 
@@ -185,10 +190,12 @@ int main()
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
+        frameStart = glfwGetTime();
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // Clear color buffer before rendering next frame
 
         rotDegrees = glm::radians(90.0 * glfwGetTime());
         localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+        viewMat = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
         transformMat = projMat * viewMat * localMat;
         shaderProgram.setMat4(transformLoc, transformMat);
 
@@ -210,9 +217,26 @@ int main()
 }
 
 //------------------------------------------Functions-----------------------------------------------
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) { glViewport(0, 0, width, height); }
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
+    {glViewport(0, 0, width, height);}
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    static float lastCallbackTime = glfwGetTime();
+    float currCallbackTime = glfwGetTime();
+    float dt = currCallbackTime - lastCallbackTime; 
+    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    if(key == GLFW_KEY_W && action == GLFW_REPEAT)
+        cam.moveForward(dt);
+    if(key == GLFW_KEY_S && action == GLFW_REPEAT)
+        cam.moveBackward(dt);
+    if(key == GLFW_KEY_A && action == GLFW_REPEAT)
+        cam.strafeLeft(dt);
+    if(key == GLFW_KEY_D && action == GLFW_REPEAT)
+        cam.strafeRight(dt);
+    if(key == GLFW_KEY_SPACE && action == GLFW_REPEAT)
+        cam.moveUp(dt);
+    if(key == GLFW_KEY_X && action == GLFW_REPEAT)
+        cam.moveDown(dt);
+    lastCallbackTime = glfwGetTime();
 }
