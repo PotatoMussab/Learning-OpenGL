@@ -31,8 +31,6 @@ const char *FRAGMENT_SHADER_PATH = "..\\shaders\\shader.fs";
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
-GLuint createShader(GLenum shaderType, const char *const *pSourceCode); // Pass pointer to a string
-GLuint createShaderFromFile(GLenum shaderType, const char *const *filePath);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -116,7 +114,7 @@ int main()
         if(nrChannels == 3)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //Load texture data into buffer
         else
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D); //Generate Mipmaps automatically
     }
     else
@@ -128,10 +126,10 @@ int main()
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
     glm::mat4 transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
-    GLuint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
-
-    glUniform1i(glGetUniformLocation(shaderProgram.ID, "texSampler"), 0); //Set the texture sampler to read from GL_TEXTURE0 (usually 0 by default)
+    GLint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+    shaderProgram.setMat4(transformLoc, transformMat);
+    
+    shaderProgram.setInt("texSampler", 0);
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
@@ -140,7 +138,7 @@ int main()
 
         rotDegrees = glm::radians(90.0 * glfwGetTime());
         transformMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformMat));
+        shaderProgram.setMat4(transformLoc, transformMat);
 
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);

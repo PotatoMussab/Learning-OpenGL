@@ -5,6 +5,9 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 typedef struct
 {
@@ -42,7 +45,58 @@ class ShaderProgram
             for(Shader *pShader:shaderList)
                 glDeleteShader(pShader->ID);
         }
-        inline void use() {glUseProgram(ID);}
+        void use()
+            {glUseProgram(ID);}
+
+        void setBool(const char *name, int value)
+            {glUniform1i(glGetUniformLocation(ID, name), value);}
+        void setInt(const char *name, int value)
+            {glUniform1i(glGetUniformLocation(ID, name), value);}
+        void setFloat(const char *name, float value)
+            {glUniform1f(glGetUniformLocation(ID, name), value);}
+        void setVec2(const char *name, const glm::vec2 &value)
+            {glUniform2fv(glGetUniformLocation(ID, name), 1, &value[0]);}
+        void setVec2(const char *name, float x, float y)
+            {glUniform2f(glGetUniformLocation(ID, name), x, y);}
+        void setVec3(const char *name, const glm::vec3 &value)
+            {glUniform3fv(glGetUniformLocation(ID, name), 1, &value[0]);}
+        void setVec3(const char *name, float x, float y, float z)
+            {glUniform3f(glGetUniformLocation(ID, name), x, y, z);}
+        void setVec4(const char *name, const glm::vec4 &value)
+            {glUniform4fv(glGetUniformLocation(ID, name), 1, &value[0]);}
+        void setVec4(const char *name, float x, float y, float z, float w) 
+            {glUniform4f(glGetUniformLocation(ID, name), x, y, z, w);}
+        void setMat2(const char *name, const glm::mat2 &mat)
+            {glUniformMatrix2fv(glGetUniformLocation(ID, name), 1, GL_FALSE, &mat[0][0]);}
+        void setMat3(const char *name, const glm::mat3 &mat)
+            {glUniformMatrix3fv(glGetUniformLocation(ID, name), 1, GL_FALSE, &mat[0][0]);}
+        void setMat4(const char *name, const glm::mat4 &mat)
+            {glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, &mat[0][0]);}
+
+        void setBool(GLint location, int value)
+            {glUniform1i(location, value);}
+        void setInt(GLint location, int value)
+            {glUniform1i(location, value);}
+        void setFloat(GLint location, float value)
+            {glUniform1f(location, value);}
+        void setVec2(GLint location, const glm::vec2 &value)
+            {glUniform2fv(location, 1, &value[0]);}
+        void setVec2(GLint location, float x, float y)
+            {glUniform2f(location, x, y);}
+        void setVec3(GLint location, const glm::vec3 &value)
+            {glUniform3fv(location, 1, &value[0]);}
+        void setVec3(GLint location, float x, float y, float z)
+            {glUniform3f(location, x, y, z);}
+        void setVec4(GLint location, const glm::vec4 &value)
+            {glUniform4fv(location, 1, &value[0]);}
+        void setVec4(GLint location, float x, float y, float z, float w) 
+            {glUniform4f(location, x, y, z, w);}
+        void setMat2(GLint location, const glm::mat2 &mat)
+            {glUniformMatrix2fv(location, 1, GL_FALSE, &mat[0][0]);}
+        void setMat3(GLint location, const glm::mat3 &mat)
+            {glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);}
+        void setMat4(GLint location, const glm::mat4 &mat)
+            {glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);}
 
     private:
         GLuint createShader(GLenum shaderType, const char *const *pSourceCode)
