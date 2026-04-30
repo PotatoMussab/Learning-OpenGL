@@ -24,19 +24,21 @@ typedef struct{
     unsigned char *data = 0;
 } image;
 //--------------------------------Settings-----------------------------------------------
-const unsigned int WIN_WIDTH = 800;
-const unsigned int WIN_HEIGHT = 600;
+unsigned int WIN_WIDTH = 800;
+unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
 const char *VERTEX_SHADER_PATH = "..\\shaders\\shader.vs";
 const char *FRAGMENT_SHADER_PATH = "..\\shaders\\shader.fs";
 //-------------------------------Global Variables----------------------------------------
 Camera cam = Camera();
-float frameStart = 0.0f;
+float frameStartTime = 0.0f;
 float dt = 0.0f;
+bool isFirstMouseMovement = true;
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void checkForKeyPress(GLFWwindow *window);
+void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -67,6 +69,8 @@ int main()
     glViewport(0, 0, 800, 600);                                        // Create a viewport for the window. Maps from (-1,1) to (0, max width/height)
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // Set callback for resizing window
     glfwSetKeyCallback(window, keyPress_callback);                     // Set callback for key press
+    glfwSetCursorPosCallback(window, mouse_move_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float triangleVertices[] = {
         // Front face
@@ -95,10 +99,10 @@ int main()
          0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 18 (back-top-right)
         -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 19 (back-top-left)
         // Bottom face
-        -0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 20 (back-bot-left)
-         0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 21 (back-bot-right)
-         0.5f, -0.5f, -0.1f,  1.0f, 1.0f, // 22 (front-bot-right)
-        -0.5f, -0.5f, -0.1f,  0.0f, 1.0f  // 23 (front-bot-left)
+        -0.5f, -0.5f,  0.1f,  0.0f, 1.0f, // 20 (back-bot-left)
+         0.5f, -0.5f,  0.1f,  1.0f, 1.0f, // 21 (back-bot-right)
+         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 22 (front-bot-right)
+        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f  // 23 (front-bot-left)
     };
     unsigned int indices[] = {
         // Front face
@@ -192,7 +196,7 @@ int main()
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
-        frameStart = glfwGetTime();
+        frameStartTime = glfwGetTime();
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // Clear color buffer before rendering next frame
 
         rotDegrees = glm::radians(90.0 * glfwGetTime());
@@ -207,8 +211,9 @@ int main()
         glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, (void*) 0);
         glfwSwapBuffers(window);
 
-        dt = glfwGetTime() - frameStart;
+        dt = glfwGetTime() - frameStartTime;
         checkForKeyPress(window);
+        cam.computeDirFromAngles();
         glfwPollEvents();
     }
 
@@ -223,7 +228,11 @@ int main()
 
 //------------------------------------------Functions-----------------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-    {glViewport(0, 0, width, height);}
+{
+    glViewport(0, 0, width, height);
+    WIN_WIDTH = width;
+    WIN_HEIGHT = height;
+}
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -244,4 +253,21 @@ void checkForKeyPress(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_X))
         cam.moveDown(dt);
     
+}
+void mouse_move_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    static float lastPosX = WIN_WIDTH/2;
+    static float lastPosY = WIN_HEIGHT/2;
+    if(isFirstMouseMovement)
+    {
+        lastPosX = xpos;
+        lastPosY = ypos;
+        isFirstMouseMovement = false;
+        return;
+    }
+    float dx = (xpos - lastPosX);
+    float dy = (lastPosY - ypos);
+    lastPosX = xpos;
+    lastPosY = ypos;
+    cam.turn(dx, dy);
 }
