@@ -176,7 +176,7 @@ int main()
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
     glm::mat4 localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
     //Apply Camera transformations (transform to view space)
-    glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
+    glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
     //Apply clip-space transformation (perspective)
     //glm::mat4 projMat = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 10.0f);
     glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
@@ -197,7 +197,7 @@ int main()
 
         rotDegrees = glm::radians(90.0 * glfwGetTime());
         localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
-        viewMat = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
+        viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
         transformMat = projMat * viewMat * localMat;
         shaderProgram.setMat4(transformLoc, transformMat);
         //Draw shapes
