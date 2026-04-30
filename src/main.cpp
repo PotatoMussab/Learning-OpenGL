@@ -255,7 +255,7 @@ void checkForKeyPress(GLFWwindow *window)
         cam.strafeRight(dt);
     if(glfwGetKey(window, GLFW_KEY_SPACE))
         cam.moveUp(dt);
-    if(glfwGetKey(window, GLFW_KEY_X))
+    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
         cam.moveDown(dt);
     
 }
