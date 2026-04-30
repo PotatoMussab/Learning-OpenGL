@@ -187,9 +187,10 @@ int main()
                                         (float)WIN_WIDTH/(float)WIN_HEIGHT,
                                         0.1f, 10.0f);
     //Combine into one big transformation matrix
-    glm::mat4 transformMat = projMat * viewMat * localMat;
 
-    GLint transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+    GLint projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
+    GLint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
+    GLint localLoc = glGetUniformLocation(shaderProgram.ID, "local");
     shaderProgram.setInt("texSampler", 0); //Set texSampler to read from GL_TEXTURE0
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
     glEnable(GL_DEPTH_TEST);
@@ -202,8 +203,9 @@ int main()
         rotDegrees = glm::radians(90.0 * glfwGetTime());
         localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
         viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
-        transformMat = projMat * viewMat * localMat;
-        shaderProgram.setMat4(transformLoc, transformMat);
+        shaderProgram.setMat4(localLoc, localMat);
+        shaderProgram.setMat4(viewLoc, viewMat);
+        shaderProgram.setMat4(projLoc, projMat);
         //Draw shapes
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
