@@ -32,9 +32,11 @@ const char *FRAGMENT_SHADER_PATH = "..\\shaders\\shader.fs";
 //-------------------------------Global Variables----------------------------------------
 Camera cam = Camera();
 float frameStart = 0.0f;
+float dt = 0.0f;
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void checkForKeyPress(GLFWwindow *window);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -198,12 +200,15 @@ int main()
         viewMat = glm::lookAt(cam.pos, cam.pos + cam.dir, cam.up);
         transformMat = projMat * viewMat * localMat;
         shaderProgram.setMat4(transformLoc, transformMat);
-
+        //Draw shapes
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 32, GL_UNSIGNED_INT, (void*) 0);
         glfwSwapBuffers(window);
+
+        dt = glfwGetTime() - frameStart;
+        checkForKeyPress(window);
         glfwPollEvents();
     }
 
@@ -221,22 +226,22 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     {glViewport(0, 0, width, height);}
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    static float lastCallbackTime = glfwGetTime();
-    float currCallbackTime = glfwGetTime();
-    float dt = currCallbackTime - lastCallbackTime; 
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    if(key == GLFW_KEY_W && action == GLFW_REPEAT)
+}
+void checkForKeyPress(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_W))
         cam.moveForward(dt);
-    if(key == GLFW_KEY_S && action == GLFW_REPEAT)
+    if(glfwGetKey(window, GLFW_KEY_S))
         cam.moveBackward(dt);
-    if(key == GLFW_KEY_A && action == GLFW_REPEAT)
+    if(glfwGetKey(window, GLFW_KEY_A))
         cam.strafeLeft(dt);
-    if(key == GLFW_KEY_D && action == GLFW_REPEAT)
+    if(glfwGetKey(window, GLFW_KEY_D))
         cam.strafeRight(dt);
-    if(key == GLFW_KEY_SPACE && action == GLFW_REPEAT)
+    if(glfwGetKey(window, GLFW_KEY_SPACE))
         cam.moveUp(dt);
-    if(key == GLFW_KEY_X && action == GLFW_REPEAT)
+    if(glfwGetKey(window, GLFW_KEY_X))
         cam.moveDown(dt);
-    lastCallbackTime = glfwGetTime();
+    
 }
