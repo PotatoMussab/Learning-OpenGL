@@ -3,3 +3,4 @@ test.cpp
 test.exe
 .gitignore
 .vscode
+.vscode/tasks.json

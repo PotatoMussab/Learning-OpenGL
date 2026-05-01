@@ -75,37 +75,37 @@ int main()
     glfwSetCursorPosCallback(window, mouse_move_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    float triangleVertices[] = {
+    float triangleVertices[24][5] = {
         // Front face
-        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 0 (front-bot-left)
-         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 1 (front-bot-right)
-         0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 2 (front-top-right)
-        -0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 3 (front-top-left)
+        {-0.5f, -0.5f, -0.1f,  0.0f, 0.0f}, // 0 (front-bot-left)
+         {0.5f, -0.5f, -0.1f,  1.0f, 0.0f}, // 1 (front-bot-right)
+         {0.5f,  0.5f, -0.1f,  1.0f, 1.0f}, // 2 (front-top-right)
+        {-0.5f,  0.5f, -0.1f,  0.0f, 1.0f}, // 3 (front-top-left)
         // Back face
-        -0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 4 (back-bot-left)
-         0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 5 (back-bot-right)
-         0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 6 (back-top-right)
-        -0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 7 (back-top-left)
+        {-0.5f, -0.5f,  0.1f,  1.0f, 0.0f}, // 4 (back-bot-left)
+         {0.5f, -0.5f,  0.1f,  0.0f, 0.0f}, // 5 (back-bot-right)
+         {0.5f,  0.5f,  0.1f,  0.0f, 1.0f}, // 6 (back-top-right)
+        {-0.5f,  0.5f,  0.1f,  1.0f, 1.0f}, // 7 (back-top-left)
         // Left face
-        -0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 8  (back-bot-left)
-        -0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 9  (front-bot-left)
-        -0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 10 (front-top-left)
-        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 11 (back-top-left)
+        {-0.5f, -0.5f,  0.1f,  0.0f, 0.0f}, // 8  (back-bot-left)
+        {-0.5f, -0.5f, -0.1f,  1.0f, 0.0f}, // 9  (front-bot-left)
+        {-0.5f,  0.5f, -0.1f,  1.0f, 1.0f}, // 10 (front-top-left)
+        {-0.5f,  0.5f,  0.1f,  0.0f, 1.0f}, // 11 (back-top-left)
         // Right face
-         0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 12 (front-bot-right)
-         0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 13 (back-bot-right)
-         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 14 (back-top-right)
-         0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 15 (front-top-right)
+         {0.5f, -0.5f, -0.1f,  0.0f, 0.0f}, // 12 (front-bot-right)
+         {0.5f, -0.5f,  0.1f,  1.0f, 0.0f}, // 13 (back-bot-right)
+         {0.5f,  0.5f,  0.1f,  1.0f, 1.0f}, // 14 (back-top-right)
+         {0.5f,  0.5f, -0.1f,  0.0f, 1.0f}, // 15 (front-top-right)
         // Top face
-        -0.5f,  0.5f, -0.1f,  0.0f, 0.0f, // 16 (front-top-left)
-         0.5f,  0.5f, -0.1f,  1.0f, 0.0f, // 17 (front-top-right)
-         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 18 (back-top-right)
-        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 19 (back-top-left)
+        {-0.5f,  0.5f, -0.1f,  0.0f, 0.0f}, // 16 (front-top-left)
+         {0.5f,  0.5f, -0.1f,  1.0f, 0.0f}, // 17 (front-top-right)
+         {0.5f,  0.5f,  0.1f,  1.0f, 1.0f}, // 18 (back-top-right)
+        {-0.5f,  0.5f,  0.1f,  0.0f, 1.0f}, // 19 (back-top-left)
         // Bottom face
-        -0.5f, -0.5f,  0.1f,  0.0f, 1.0f, // 20 (back-bot-left)
-         0.5f, -0.5f,  0.1f,  1.0f, 1.0f, // 21 (back-bot-right)
-         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 22 (front-bot-right)
-        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f  // 23 (front-bot-left)
+        {-0.5f, -0.5f,  0.1f,  0.0f, 1.0f}, // 20 (back-bot-left)
+         {0.5f, -0.5f,  0.1f,  1.0f, 1.0f}, // 21 (back-bot-right)
+         {0.5f, -0.5f, -0.1f,  1.0f, 0.0f}, // 22 (front-bot-right)
+        {-0.5f, -0.5f, -0.1f,  0.0f, 0.0f}  // 23 (front-bot-left)
     };
     unsigned int indices[] = {
         // Front face
@@ -182,6 +182,7 @@ int main()
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
     float rotDegrees = glm::radians(90.0 * glfwGetTime());
     glm::mat4 localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+    //Transform to world space through model matrix (currently no need)
     //Apply Camera transformations (transform to view space)
     glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
     //Apply clip-space transformation (perspective)
@@ -189,11 +190,10 @@ int main()
     glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
                                         (float)WIN_WIDTH/(float)WIN_HEIGHT,
                                         0.1f, 10.0f);
-    //Combine into one big transformation matrix
-
     GLint projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
     GLint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
     GLint localLoc = glGetUniformLocation(shaderProgram.ID, "local");
+
     shaderProgram.setInt("texSampler", 0); //Set texSampler to read from GL_TEXTURE0
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
     glEnable(GL_DEPTH_TEST);
