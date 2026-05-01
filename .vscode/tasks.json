@@ -10,6 +10,7 @@
                 "-g",
                 "${file}",
                 "-I", "D:/GLFW/include",
+                "-static",
                 "-L", "D:/GLFW/lib-mingw-w64",
                 "-lglfw3",
                 "-lopengl32",
