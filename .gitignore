@@ -2,3 +2,4 @@ Main.exe
 test.cpp
 test.exe
 .gitignore
+.vscode
