@@ -33,7 +33,6 @@ const char *LIGHT_VERTEX_SHADER_PATH = "..\\shaders\\lightShader.vs";
 const char *LIGHT_FRAGMENT_SHADER_PATH = "..\\shaders\\lightShader.fs";
 //-------------------------------Global Variables----------------------------------------
 Camera cam = Camera();
-glm::vec3 lightPos(0.5f, 0.0f, -1.5f);
 float currFrameTime = 0.0f, lastFrameTime = 0.0f;
 bool isFirstMouseMovement = true;
 bool mouseControlsEnabled = true;
@@ -81,15 +80,15 @@ int main()
     float triangleVertices[] = {
         //     positions            normals
         // Back face
-        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f,  1.0f, // 0 (back-bot-left)
-         0.5f, -0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 1 (back-bot-right)
-         0.5f,  0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 2 (back-top-right)
-        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 3 (back-top-left)
+        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 0 (back-bot-left)
+         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 1 (back-bot-right)
+         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 2 (back-top-right)
+        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 3 (back-top-left)
         // Front face
-        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f, -1.0f,// 4 (front-bot-left)
-         0.5f, -0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 5 (front-bot-right)
-         0.5f,  0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 6 (front-top-right)
-        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 7 (front-top-left)
+        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,// 4 (front-bot-left)
+         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 5 (front-bot-right)
+         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 6 (front-top-right)
+        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 7 (front-top-left)
         // Left face
         -0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 8  (front-bot-left)
         -0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 9  (back-bot-left)
@@ -132,13 +131,13 @@ int main()
         22, 23, 20
     };
     //Initialize shader program
-    Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
-    Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0};
+    Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER};
+    Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER};
     ShaderProgram shaderProgram({&vShader, &fShader});
     shaderProgram.use();
     //Shader program for light
-    Shader vlShader = {LIGHT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
-    Shader flShader = {LIGHT_FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0};
+    Shader vlShader = {LIGHT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER};
+    Shader flShader = {LIGHT_FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER};
     ShaderProgram lShaderProgram({&vlShader,&flShader});
 
     //Generate VAO, VBO and EBO 
@@ -153,7 +152,7 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     //Bind VBO and buffer vertex data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
     //Define attribute arrays and enable them in VAO
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
@@ -172,6 +171,7 @@ int main()
 
     //Apply transformations to make the picture rotate (world space)
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
+    glm::vec3 lightPos(1.5f, 1.0f, 1.5f);
     float rotDegrees = glm::radians(60.0f);
     glm::mat4 modelMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
     //Apply Camera transformations (transform to view space)
@@ -196,6 +196,7 @@ int main()
     shaderProgram.setMat4(viewLoc, viewMat);
     shaderProgram.setMat4(projLoc, projMat);
     shaderProgram.setVec3("color", 1.0f, 0.5f, 0.3f);
+    shaderProgram.setVec3("lightPos", lightPos);
     lShaderProgram.use();
     lShaderProgram.setMat4(lModelLoc, lModelMat);
     lShaderProgram.setMat4(lViewLoc, viewMat);

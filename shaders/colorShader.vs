@@ -3,6 +3,7 @@ layout (location=0) in vec3 inPos;
 layout (location=1) in vec3 inNormal;
 
 out vec3 vNormal;
+out vec3 vPos;
 
 uniform mat4 proj;
 uniform mat4 view;
@@ -10,6 +11,8 @@ uniform mat4 model;
 
 void main()
 {
-gl_Position = proj * view * model * vec4(inPos, 1.0f);
-vNormal = inNormal;
+vec4 modelPos = model * vec4(inPos, 1.0f);
+gl_Position = proj * view * modelPos;
+vPos = modelPos.xyz;
+vNormal = mat3(model) * inNormal;
 }
