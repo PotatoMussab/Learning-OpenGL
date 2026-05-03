@@ -188,6 +188,7 @@ int main()
     GLint projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
     GLint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
     GLint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+    GLint cameraPosLoc = glGetUniformLocation(shaderProgram.ID, "cameraPos");
     GLint lProjLoc = glGetUniformLocation(lShaderProgram.ID, "proj");
     GLint lViewLoc = glGetUniformLocation(lShaderProgram.ID, "view");
     GLint lModelLoc = glGetUniformLocation(lShaderProgram.ID, "model");
@@ -195,6 +196,7 @@ int main()
     shaderProgram.setMat4(modelLoc, modelMat);
     shaderProgram.setMat4(viewLoc, viewMat);
     shaderProgram.setMat4(projLoc, projMat);
+    shaderProgram.setVec3(cameraPosLoc, cam.pos);
     shaderProgram.setVec3("color", 1.0f, 0.5f, 0.3f);
     shaderProgram.setVec3("lightPos", lightPos);
     lShaderProgram.use();
@@ -213,6 +215,7 @@ int main()
         //Draw the main cube
         shaderProgram.use();
         shaderProgram.setMat4(viewLoc, viewMat);
+        shaderProgram.setVec3(cameraPosLoc, cam.pos);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*) 0);
         //Draw light
