@@ -27,13 +27,16 @@ typedef struct{
 unsigned int WIN_WIDTH = 800;
 unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
-const char *VERTEX_SHADER_PATH = "..\\shaders\\texShader.vs";
-const char *FRAGMENT_SHADER_PATH = "..\\shaders\\texShader.fs";
+const char *VERTEX_SHADER_PATH = "..\\shaders\\colorShader.vs";
+const char *FRAGMENT_SHADER_PATH = "..\\shaders\\colorShader.fs";
+const char *LIGHT_VERTEX_SHADER_PATH = "..\\shaders\\lightShader.vs";
+const char *LIGHT_FRAGMENT_SHADER_PATH = "..\\shaders\\lightShader.fs";
 //-------------------------------Global Variables----------------------------------------
 Camera cam = Camera();
-float currFrameTime = 0.0f;
-float dt = 0.0f;
+glm::vec3 lightPos(0.5f, 0.0f, -1.5f);
+float currFrameTime = 0.0f, lastFrameTime = 0.0f;
 bool isFirstMouseMovement = true;
+bool mouseControlsEnabled = true;
 //---------------------------Prototype functions-----------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -76,42 +79,43 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float triangleVertices[] = {
-        // Front face
-        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 0 (front-bot-left)
-         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 1 (front-bot-right)
-         0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 2 (front-top-right)
-        -0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 3 (front-top-left)
+        //     positions            normals
         // Back face
-        -0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 4 (back-bot-left)
-         0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 5 (back-bot-right)
-         0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 6 (back-top-right)
-        -0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 7 (back-top-left)
+        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f,  1.0f, // 0 (back-bot-left)
+         0.5f, -0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 1 (back-bot-right)
+         0.5f,  0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 2 (back-top-right)
+        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f,  1.0f,// 3 (back-top-left)
+        // Front face
+        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f, -1.0f,// 4 (front-bot-left)
+         0.5f, -0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 5 (front-bot-right)
+         0.5f,  0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 6 (front-top-right)
+        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f, -1.0f, // 7 (front-top-left)
         // Left face
-        -0.5f, -0.5f,  0.1f,  0.0f, 0.0f, // 8  (back-bot-left)
-        -0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 9  (front-bot-left)
-        -0.5f,  0.5f, -0.1f,  1.0f, 1.0f, // 10 (front-top-left)
-        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 11 (back-top-left)
+        -0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 8  (front-bot-left)
+        -0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 9  (back-bot-left)
+        -0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 10 (back-top-left)
+        -0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 11 (front-top-left)
         // Right face
-         0.5f, -0.5f, -0.1f,  0.0f, 0.0f, // 12 (front-bot-right)
-         0.5f, -0.5f,  0.1f,  1.0f, 0.0f, // 13 (back-bot-right)
-         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 14 (back-top-right)
-         0.5f,  0.5f, -0.1f,  0.0f, 1.0f, // 15 (front-top-right)
+         0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 12 (back-bot-right)
+         0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 13 (front-bot-right)
+         0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 14 (front-top-right)
+         0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 15 (back-top-right)
         // Top face
-        -0.5f,  0.5f, -0.1f,  0.0f, 0.0f, // 16 (front-top-left)
-         0.5f,  0.5f, -0.1f,  1.0f, 0.0f, // 17 (front-top-right)
-         0.5f,  0.5f,  0.1f,  1.0f, 1.0f, // 18 (back-top-right)
-        -0.5f,  0.5f,  0.1f,  0.0f, 1.0f, // 19 (back-top-left)
+        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 16 (back-top-left)
+         0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 17 (back-top-right)
+         0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 18 (front-top-right)
+        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 19 (front-top-left)
         // Bottom face
-        -0.5f, -0.5f,  0.1f,  0.0f, 1.0f, // 20 (back-bot-left)
-         0.5f, -0.5f,  0.1f,  1.0f, 1.0f, // 21 (back-bot-right)
-         0.5f, -0.5f, -0.1f,  1.0f, 0.0f, // 22 (front-bot-right)
-        -0.5f, -0.5f, -0.1f,  0.0f, 0.0f  // 23 (front-bot-left)
+        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 20 (front-bot-left)
+         0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 21 (front-bot-right)
+         0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 22 (back-bot-right)
+        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 23 (back-bot-left)
     };
     unsigned int indices[] = {
-        // Front face
+        // Back face
         0, 1, 2,
         2, 3, 0,
-        // Back face
+        // Front face
         4, 5, 6,
         6, 7, 4,
         // Left face
@@ -127,11 +131,16 @@ int main()
         20, 21, 22,
         22, 23, 20
     };
-
+    //Initialize shader program
     Shader vShader = {VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
-    Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0}; 
+    Shader fShader = {FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0};
     ShaderProgram shaderProgram({&vShader, &fShader});
     shaderProgram.use();
+    //Shader program for light
+    Shader vlShader = {LIGHT_VERTEX_SHADER_PATH, GL_VERTEX_SHADER, 0};
+    Shader flShader = {LIGHT_FRAGMENT_SHADER_PATH, GL_FRAGMENT_SHADER, 0};
+    ShaderProgram lShaderProgram({&vlShader,&flShader});
+
     //Generate VAO, VBO and EBO 
     GLuint VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
@@ -146,43 +155,25 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_DYNAMIC_DRAW);
     //Define attribute arrays and enable them in VAO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    //Apply texture to the drawn shape
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("../textures/bookshelf.jpg", &width, &height, &nrChannels, 0); //Load image
+    //Generate light VAO
+    GLuint lVAO;
+    glGenVertexArrays(1, &lVAO);
+    //Bind VAO so I can modify vertex attributes
+    glBindVertexArray(lVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
 
-    GLuint texture;
-    glGenTextures(1,&texture); //Generate texture
-    glActiveTexture(GL_TEXTURE0); //Set active texture to 0
-    glBindTexture(GL_TEXTURE_2D, texture); //Bind generated texture
-    // Set texture wrapping/filtering optionss
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    if(data)
-    {
-        if(nrChannels == 3)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data); //Load texture data into buffer
-        else
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D); //Generate Mipmaps automatically
-    }
-    else
-    {
-        std::cout << "FAILED TO LOAD IMAGE" << std::endl;
-    }
-    stbi_image_free(data); //Free image data
-    //Apply transformations to make the picture rotate (local space)
+    //Apply transformations to make the picture rotate (world space)
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
-    float rotDegrees = glm::radians(90.0 * glfwGetTime());
-    glm::mat4 localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
-    //Transform to world space through model matrix (currently no need)
+    float rotDegrees = glm::radians(60.0f);
+    glm::mat4 modelMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
     //Apply Camera transformations (transform to view space)
     glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
     //Apply clip-space transformation (perspective)
@@ -190,42 +181,60 @@ int main()
     glm::mat4 projMat = glm::perspective(glm::radians(45.0f),
                                         (float)WIN_WIDTH/(float)WIN_HEIGHT,
                                         0.1f, 10.0f);
+    glm::mat4 lModelMat = glm::mat4(1.0f);
+    lModelMat = glm::translate(lModelMat, lightPos);
+    lModelMat = glm::scale(lModelMat, glm::vec3(0.2f));
+
     GLint projLoc = glGetUniformLocation(shaderProgram.ID, "proj");
     GLint viewLoc = glGetUniformLocation(shaderProgram.ID, "view");
-    GLint localLoc = glGetUniformLocation(shaderProgram.ID, "local");
+    GLint modelLoc = glGetUniformLocation(shaderProgram.ID, "model");
+    GLint lProjLoc = glGetUniformLocation(lShaderProgram.ID, "proj");
+    GLint lViewLoc = glGetUniformLocation(lShaderProgram.ID, "view");
+    GLint lModelLoc = glGetUniformLocation(lShaderProgram.ID, "model");
 
-    shaderProgram.setInt("texSampler", 0); //Set texSampler to read from GL_TEXTURE0
-    glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // Set color (RGBA color scheme) for clearing window
+    shaderProgram.setMat4(modelLoc, modelMat);
+    shaderProgram.setMat4(viewLoc, viewMat);
+    shaderProgram.setMat4(projLoc, projMat);
+    shaderProgram.setVec3("color", 1.0f, 0.5f, 0.3f);
+    lShaderProgram.use();
+    lShaderProgram.setMat4(lModelLoc, lModelMat);
+    lShaderProgram.setMat4(lViewLoc, viewMat);
+    lShaderProgram.setMat4(lProjLoc, projMat);
+    lShaderProgram.setVec3("color", 1.0f, 1.0f, 0.85f);
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set color (RGBA color scheme) for clearing window
     glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
-        currFrameTime = glfwGetTime();
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // Clear color buffer before rendering next frame
-
-        rotDegrees = glm::radians(90.0 * glfwGetTime());
-        localMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
         viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
-        shaderProgram.setMat4(localLoc, localMat);
+        //Draw the main cube
+        shaderProgram.use();
         shaderProgram.setMat4(viewLoc, viewMat);
-        shaderProgram.setMat4(projLoc, projMat);
-        //Draw shapes
         glBindVertexArray(VAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*) 0);
+        //Draw light
+        lShaderProgram.use();
+        lShaderProgram.setMat4(lViewLoc, viewMat);
+        glBindVertexArray(lVAO);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*) 0);
+
         glfwSwapBuffers(window);
 
-        dt = glfwGetTime() - currFrameTime;
+        lastFrameTime = currFrameTime;
+        currFrameTime = glfwGetTime();
         checkForKeyPress(window);
         cam.computeDirFromAngles();
         glfwPollEvents();
     }
 
     glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &lVAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteTextures(1, &texture);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram.ID);
+    glDeleteProgram(lShaderProgram.ID);
 
     glfwTerminate(); // Close window
     return 0;
@@ -241,10 +250,22 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    {
+        if(mouseControlsEnabled)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            mouseControlsEnabled = false;
+        }
+        else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            mouseControlsEnabled = true;
+        }
+    }
 }
 void checkForKeyPress(GLFWwindow *window)
 {
+    float dt = currFrameTime - lastFrameTime;
     if(glfwGetKey(window, GLFW_KEY_W))
         cam.moveForward(dt);
     if(glfwGetKey(window, GLFW_KEY_S))

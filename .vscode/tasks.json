@@ -10,7 +10,6 @@
                 "-g",
                 "${file}",
                 "-I", "D:/OpenGL Libraries/include",
-                "-static",
                 "-L", "D:/OpenGL Libraries/lib-mingw-w64",
                 "-lglfw3",
                 "-lopengl32",
