@@ -172,6 +172,7 @@ int main()
     //Apply transformations to make the picture rotate (world space)
     glm::vec3 axis(0.0f, 1.0f, 0.0f);
     glm::vec3 lightPos(1.5f, 1.0f, 1.5f);
+    glm::vec3 lightColor(1.0f, 1.0f, 0.8f);
     float rotDegrees = glm::radians(60.0f);
     glm::mat4 modelMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
     //Apply Camera transformations (transform to view space)
@@ -197,13 +198,17 @@ int main()
     shaderProgram.setMat4(viewLoc, viewMat);
     shaderProgram.setMat4(projLoc, projMat);
     shaderProgram.setVec3(cameraPosLoc, cam.pos);
-    shaderProgram.setVec3("color", 1.0f, 0.5f, 0.3f);
     shaderProgram.setVec3("lightPos", lightPos);
+    shaderProgram.setVec3("lightColor", lightColor);
+    shaderProgram.setVec3("material.ambientColor", 0.0625f, 0.0625f, 0.03125f);
+    shaderProgram.setVec3("material.diffuseColor", 1.0f, 0.5f, 0.31f);
+    shaderProgram.setVec3("material.specularColor", 0.5f, 0.5f, 0.5f);
+    shaderProgram.setFloat("material.shininess", 32.0f);
     lShaderProgram.use();
     lShaderProgram.setMat4(lModelLoc, lModelMat);
     lShaderProgram.setMat4(lViewLoc, viewMat);
     lShaderProgram.setMat4(lProjLoc, projMat);
-    lShaderProgram.setVec3("color", 1.0f, 1.0f, 0.85f);
+    lShaderProgram.setVec3("color", lightColor);
 
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // Set color (RGBA color scheme) for clearing window
     glEnable(GL_DEPTH_TEST);
