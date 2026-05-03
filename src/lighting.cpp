@@ -22,13 +22,13 @@ typedef struct{
     int width = 0;
     int nrChannels = 0;
     unsigned char *data = 0;
-} image;
+} Image;
 //--------------------------------Settings-----------------------------------------------
 unsigned int WIN_WIDTH = 800;
 unsigned int WIN_HEIGHT = 600;
 const char *WIN_TITLE = "Learning OpenGL";
-const char *VERTEX_SHADER_PATH = "..\\shaders\\colorShader.vs";
-const char *FRAGMENT_SHADER_PATH = "..\\shaders\\colorShader.fs";
+const char *VERTEX_SHADER_PATH = "..\\shaders\\texShader.vs";
+const char *FRAGMENT_SHADER_PATH = "..\\shaders\\texShader.fs";
 const char *LIGHT_VERTEX_SHADER_PATH = "..\\shaders\\lightShader.vs";
 const char *LIGHT_FRAGMENT_SHADER_PATH = "..\\shaders\\lightShader.fs";
 //-------------------------------Global Variables----------------------------------------
@@ -41,6 +41,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void keyPress_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 void checkForKeyPress(GLFWwindow *window);
 void mouse_move_callback(GLFWwindow *window, double xpos, double ypos);
+int loadImage(Image *img, const char *path);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
@@ -78,37 +79,37 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float triangleVertices[] = {
-        //     positions            normals
+        //     positions            normals           texture coords
         // Back face
-        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, // 0 (back-bot-left)
-         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 1 (back-bot-right)
-         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 2 (back-top-right)
-        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,// 3 (back-top-left)
+        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f, // 0 (back-bot-left)
+         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 0.0f, // 1 (back-bot-right)
+         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 1.0f, // 2 (back-top-right)
+        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 1.0f, // 3 (back-top-left)
         // Front face
-        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,// 4 (front-bot-left)
-         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 5 (front-bot-right)
-         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 6 (front-top-right)
-        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f, // 7 (front-top-left)
+        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,// 4 (front-bot-left)
+         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 0.0f,// 5 (front-bot-right)
+         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 1.0f,// 6 (front-top-right)
+        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 1.0f,// 7 (front-top-left)
         // Left face
-        -0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 8  (front-bot-left)
-        -0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 9  (back-bot-left)
-        -0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f, // 10 (back-top-left)
-        -0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f, // 11 (front-top-left)
+        -0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,// 8  (front-bot-left)
+        -0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 0.0f,// 9  (back-bot-left)
+        -0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 1.0f,// 10 (back-top-left)
+        -0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 1.0f,// 11 (front-top-left)
         // Right face
-         0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 12 (back-bot-right)
-         0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 13 (front-bot-right)
-         0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f, // 14 (front-top-right)
-         0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f, // 15 (back-top-right)
+         0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,// 12 (back-bot-right)
+         0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 0.0f,// 13 (front-bot-right)
+         0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 1.0f,// 14 (front-top-right)
+         0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 1.0f,// 15 (back-top-right)
         // Top face
-        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 16 (back-top-left)
-         0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f, // 17 (back-top-right)
-         0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 18 (front-top-right)
-        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f, // 19 (front-top-left)
+        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f,// 16 (back-top-left)
+         0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 0.0f,// 17 (back-top-right)
+         0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 1.0f,// 18 (front-top-right)
+        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 1.0f,// 19 (front-top-left)
         // Bottom face
-        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 20 (front-bot-left)
-         0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f, // 21 (front-bot-right)
-         0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 22 (back-bot-right)
-        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f, // 23 (back-bot-left)
+        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,// 20 (front-bot-left)
+         0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 0.0f,// 21 (front-bot-right)
+         0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 1.0f,// 22 (back-bot-right)
+        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 1.0f,// 23 (back-bot-left)
     };
     unsigned int indices[] = {
         // Back face
@@ -154,10 +155,12 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
     //Define attribute arrays and enable them in VAO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     //Generate light VAO
     GLuint lVAO;
@@ -166,14 +169,36 @@ int main()
     glBindVertexArray(lVAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
+    //Generate textures
+    GLuint diffTexture, specTexture;
+    glGenTextures(1, &diffTexture);
+    glGenTextures(1, &specTexture);
+    //Load images into textures
+    Image diffImg, specImg;
+    stbi_set_flip_vertically_on_load(true);
+    if(loadImage(&diffImg, "..\\textures\\container2.png"))
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, diffImg.width, diffImg.height, 0, GL_RGB, GL_UNSIGNED_BYTE, diffImg.data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    if(loadImage(&specImg, "..\\textures\\container2_specular.png"))
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, specImg.width, specImg.height, 0, GL_RGB, GL_UNSIGNED_BYTE, specImg.data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    stbi_image_free(diffImg.data);
+    stbi_image_free(specImg.data);
+
+    glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
     //Apply transformations to make the picture rotate (world space)
-    glm::vec3 axis(0.0f, 1.0f, 0.0f);
-    glm::vec3 lightPos(1.5f, 1.0f, 1.5f);
-    float rotDegrees = glm::radians(60.0f);
-    glm::mat4 modelMat = glm::rotate(glm::mat4(1.0f), rotDegrees, axis);
+    glm::mat4 modelMat = glm::mat4(1);
     //Apply Camera transformations (transform to view space)
     glm::mat4 viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
     //Apply clip-space transformation (perspective)
@@ -193,19 +218,17 @@ int main()
     GLint lViewLoc = glGetUniformLocation(lShaderProgram.ID, "view");
     GLint lModelLoc = glGetUniformLocation(lShaderProgram.ID, "model");
 
-    glm::vec3 lightColor(1.0f, 1.0f, 0.8f);
-    glm::vec3 lightIntensity(0.1f, 0.9f, 0.5f);
+    glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
     shaderProgram.setMat4(modelLoc, modelMat);
     shaderProgram.setMat4(viewLoc, viewMat);
     shaderProgram.setMat4(projLoc, projMat);
     shaderProgram.setVec3(cameraPosLoc, cam.pos);
     shaderProgram.setVec3("lightPos", lightPos);
     shaderProgram.setVec3("lightColor", lightColor);
-    shaderProgram.setVec3("lightIntensity", lightIntensity);
-    shaderProgram.setVec3("material.ambientColor", 1.0f, 0.5f, 0.31f);
-    shaderProgram.setVec3("material.diffuseColor", 1.0f, 0.5f, 0.31f);
-    shaderProgram.setVec3("material.specularColor", 1.0f, 1.0f, 1.0f);
-    shaderProgram.setFloat("material.shininess", 32.0f);
+    shaderProgram.setVec3("lightIntensity", 0.2f, 0.5f, 1.0f);
+    shaderProgram.setFloat("material.shininess", 64.0f);
+    shaderProgram.setInt("material.diffuseTexSampler", 0);
+    shaderProgram.setInt("material.specularTexSampler", 1);
     lShaderProgram.use();
     lShaderProgram.setMat4(lModelLoc, lModelMat);
     lShaderProgram.setMat4(lViewLoc, viewMat);
@@ -218,6 +241,12 @@ int main()
     while (!glfwWindowShouldClose(window)) // While window shouldn't close
     {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); // Clear color buffer before rendering next frame
+        //Process Input
+        lastFrameTime = currFrameTime;
+        currFrameTime = glfwGetTime();
+        checkForKeyPress(window);
+        cam.computeDirFromAngles();
+        //Start drawing
         viewMat = glm::lookAt(cam.pos, cam.pos + cam.getDir(), cam.getUp());
         //Draw the main cube
         shaderProgram.use();
@@ -232,11 +261,6 @@ int main()
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*) 0);
 
         glfwSwapBuffers(window);
-
-        lastFrameTime = currFrameTime;
-        currFrameTime = glfwGetTime();
-        checkForKeyPress(window);
-        cam.computeDirFromAngles();
         glfwPollEvents();
     }
 
@@ -307,4 +331,15 @@ void mouse_move_callback(GLFWwindow *window, double xpos, double ypos)
     lastPosX = xpos;
     lastPosY = ypos;
     cam.turn(dx, dy);
+}
+int loadImage(Image *img, const char *path)
+{
+    img->data = stbi_load(path, &img->width, &img->height, &img->nrChannels, 3);
+    if(!img->data)
+    {
+        std::cout << "Failed to load image from" << path << std::endl;
+        return 0;
+    }
+    else
+        return 1;
 }
