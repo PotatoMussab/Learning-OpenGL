@@ -14,18 +14,19 @@ uniform vec3 lightPos;
 uniform vec3 cameraPos;
 uniform vec3 lightColor;
 uniform Material material;
+uniform vec3 lightIntensity;
 
 void main()
 {
-    vec3 ambient = material.ambientColor;
+    vec3 ambient = lightIntensity.x * material.ambientColor;
 
     vec3 norm = normalize(vNormal);
     vec3 lightDir = normalize(lightPos - vPos);
-    vec3 diffuse = material.diffuseColor * max(dot(norm, lightDir), 0.0f);
+    vec3 diffuse = lightIntensity.y * material.diffuseColor * max(dot(norm, lightDir), 0.0f);
 
     vec3 reflectedLightDir = reflect(-lightDir , norm);
     vec3 viewDir = normalize(cameraPos - vPos);
-    vec3 specular = material.specularColor * pow(max(dot(reflectedLightDir, viewDir), 0.0f), material.shininess);
+    vec3 specular = lightIntensity.z * material.specularColor * pow(max(dot(reflectedLightDir, viewDir), 0.0f), material.shininess);
 
     vec3 result = (ambient + diffuse + specular) * lightColor;
     fColor = vec4(result, 1.0f);
