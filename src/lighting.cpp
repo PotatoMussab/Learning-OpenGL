@@ -223,9 +223,9 @@ int main()
     shaderProgram.setMat4(viewLoc, viewMat);
     shaderProgram.setMat4(projLoc, projMat);
     shaderProgram.setVec3(cameraPosLoc, cam.pos);
-    shaderProgram.setVec3("lightPos", lightPos);
-    shaderProgram.setVec3("lightColor", lightColor);
-    shaderProgram.setVec3("lightIntensity", 0.2f, 0.5f, 1.0f);
+    shaderProgram.setVec3("light.pos", lightPos);
+    shaderProgram.setVec3("light.color", lightColor);
+    shaderProgram.setVec3("light.intensity", 0.2f, 0.5f, 1.0f);
     shaderProgram.setFloat("material.shininess", 64.0f);
     shaderProgram.setInt("material.diffuseTexSampler", 0);
     shaderProgram.setInt("material.specularTexSampler", 1);
