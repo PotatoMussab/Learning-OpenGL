@@ -14,9 +14,9 @@ struct Light{
     vec3 pos;
     vec3 color;
     vec3 intensity;
-}
+    };
 uniform vec3 cameraPos;
-uniform Light light
+uniform Light light;
 uniform Material material;
 
 void main()

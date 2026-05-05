@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "shader.hpp"
 #include "camera.hpp"
+#include <direct.h>
 //--------------------------------Typedefs-----------------------------------------------
 typedef int32_t i32;
 typedef int16_t i16;
@@ -45,6 +46,12 @@ int loadImage(Image *img, const char *path);
 //--------------------------------Main---------------------------------------------------
 int main()
 {
+    char buffer[1024];
+    if (_getcwd(buffer, sizeof(buffer)) != nullptr) {
+        std::cout << "Current directory: " << buffer << std::endl;
+    } else {
+        std::cerr << "Error getting current directory" << std::endl;
+    }
     if (!glfwInit()) // Initialize GLFW
     {
         std::cout << "Failed to initialize GLFW" << std::endl;
